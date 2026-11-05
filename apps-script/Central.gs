@@ -24,7 +24,9 @@ function centralLer_(sheet) {
 }
 function centralSnapshot_(sheet) {
   const rows = centralLer_(sheet).map(x => x.value);
-  return {records:rows.filter(x => x.id !== 'perfil'), profile:rows.find(x => x.id === 'perfil') || {id:'perfil',name:'Grace',assistant:'Minha assistente',start:Utilities.formatDate(new Date(),'America/Sao_Paulo','yyyy-MM-dd')}, updated:new Date().toISOString()};
+  let profile=rows.find(x=>x.id==='perfil');
+  if(!profile){profile={id:'perfil',version:1,name:'Grace',assistant:'Minha assistente',start:Utilities.formatDate(new Date(),'America/Sao_Paulo','yyyy-MM-dd')};sheet.appendRow(['perfil',JSON.stringify(profile),new Date().toISOString()]);}
+  return {records:rows.filter(x => x.id !== 'perfil'), profile:profile, updated:new Date().toISOString()};
 }
 function centralApi(request) {
   centralAutorizar_();
@@ -55,6 +57,7 @@ function centralApi(request) {
       if (request.title!==undefined) { record.title=centralTexto_(request.title,300); if(!record.title) throw new Error('Descrição obrigatória.'); }
       if (request.date!==undefined) record.date=centralData_(request.date);
       if (request.time!==undefined) record.time=centralHora_(request.time);
+      if (request.weekly!==undefined) { const n=Number(request.weekly); if(!Number.isInteger(n)||n<0||n>7) throw new Error('Frequência inválida.'); record.weekly=n; }
       if (request.status!==undefined) {
         if (!['ativo','concluido','cancelado','excluido'].includes(request.status)) throw new Error('Situação inválida.');
         record.status=request.status;
